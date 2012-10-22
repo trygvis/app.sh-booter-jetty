@@ -51,7 +51,7 @@ public class Main {
                 }
             }
 
-            String httpPort = properties.getProperty("http.port");
+            String httpPort = properties.getProperty("httpPort", System.getenv("httpPort"));
             if (httpPort != null) {
                 server.setHttpPort(parseInt(httpPort));
             }

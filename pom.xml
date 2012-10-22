@@ -20,6 +20,37 @@
       <artifactId>jetty-webapp</artifactId>
       <version>${versions.jetty8}</version>
     </dependency>
+
+    <!--
+    $ (cd jetty-distribution-8.1.7.v20120910; find * -name \*.jar|sort|grep jsp)
+    lib/jsp/com.sun.el-2.2.0.v201108011116.jar
+    lib/jsp/javax.el-2.2.0.v201108011116.jar
+    lib/jsp/javax.servlet.jsp-2.2.0.v201112011158.jar
+    lib/jsp/javax.servlet.jsp.jstl-1.2.0.v201105211821.jar
+    lib/jsp/org.apache.jasper.glassfish-2.2.2.v201112011158.jar
+    lib/jsp/org.apache.taglibs.standard.glassfish-1.2.0.v201112081803.jar
+    lib/jsp/org.eclipse.jdt.core-3.7.1.jar
+    -->
+    <dependency>
+      <groupId>org.eclipse.jetty.orbit</groupId>
+      <artifactId>com.sun.el</artifactId>
+      <version>2.2.0.v201108011116</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.orbit</groupId>
+      <artifactId>javax.el</artifactId>
+      <version>2.2.0.v201108011116</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.orbit</groupId>
+      <artifactId>javax.servlet.jsp</artifactId>
+      <version>2.2.0.v201112011158</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.orbit</groupId>
+      <artifactId>javax.servlet.jsp.jstl</artifactId>
+      <version>1.2.0.v201105211821</version>
+    </dependency>
     <dependency>
       <groupId>org.eclipse.jetty.orbit</groupId>
       <artifactId>org.apache.jasper.glassfish</artifactId>
@@ -27,8 +58,13 @@
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty.orbit</groupId>
-      <artifactId>javax.el</artifactId>
-      <version>2.2.0.v201108011116</version>
+      <artifactId>org.apache.taglibs.standard.glassfish</artifactId>
+      <version>1.2.0.v201112081803</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.orbit</groupId>
+      <artifactId>org.eclipse.jdt.core</artifactId>
+      <version>3.7.1</version>
     </dependency>
   </dependencies>
 </project>
