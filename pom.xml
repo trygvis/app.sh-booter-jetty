@@ -8,7 +8,7 @@
   </parent>
   <groupId>io.trygvis.appsh</groupId>
   <artifactId>booter-jetty</artifactId>
-  <version>8.1.7.v20120910+1</version>
+  <version>8.1.7.v20120910+2-SNAPSHOT</version>
   <properties>
     <versions.jetty8>8.1.7.v20120910</versions.jetty8>
   </properties>
