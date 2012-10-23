@@ -4,11 +4,16 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>io.trygvis.appsh</groupId>
-    <artifactId>appsh-parent</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>7</version>
   </parent>
-  <artifactId>booter-jetty8</artifactId>
+  <groupId>io.trygvis.appsh</groupId>
+  <artifactId>booter-jetty</artifactId>
+  <version>8.1.7.v20120910+1-SNAPSHOT</version>
+  <properties>
+    <versions.jetty8>8.1.7.v20120910</versions.jetty8>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
@@ -67,4 +72,9 @@
       <version>3.7.1</version>
     </dependency>
   </dependencies>
+  <scm>
+    <connection>scm:git:http://trygvis.io/~trygvis/git/2012/10/app.sh-booter-jetty.git</connection>
+    <developerConnection>scm:git:ssh://trygvis.io/~trygvis/git/2012/10/app.sh-booter-jetty.git</developerConnection>
+    <url>http://trygvis.io/~trygvis/git/2012/10/app.sh-booter-jetty.git</url>
+  </scm>
 </project>
