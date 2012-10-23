@@ -1,4 +1,4 @@
-package io.trygvis.appsh.booter.jetty8;
+package io.trygvis.appsh.booter.jetty;
 
 import org.eclipse.jetty.util.IO;
 
