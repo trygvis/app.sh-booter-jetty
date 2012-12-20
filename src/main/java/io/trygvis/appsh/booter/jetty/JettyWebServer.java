@@ -1,6 +1,5 @@
 package io.trygvis.appsh.booter.jetty;
 
-import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
@@ -53,8 +52,13 @@ public class JettyWebServer {
 
         Server server = new Server();
         if (httpPort != 0) {
-            Connector connector = new SelectChannelConnector();
+            SelectChannelConnector connector = new SelectChannelConnector();
             connector.setPort(httpPort);
+
+            // http://docs.codehaus.org/display/JETTY/Configuring+Connectors - Look for "forwarded"
+            // http://docs.codehaus.org/display/JETTY/Configuring+mod_proxy
+            // http://httpd.apache.org/docs/2.2/mod/mod_proxy.html#x-headers
+            connector.setForwarded(true);
             server.addConnector(connector);
         }
 
