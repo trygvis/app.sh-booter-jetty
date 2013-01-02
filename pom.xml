@@ -77,4 +77,16 @@
     <developerConnection>scm:git:ssh://trygvis.io/~trygvis/git/2012/10/app.sh-booter-jetty.git</developerConnection>
     <url>http://trygvis.io/~trygvis/git/2012/10/app.sh-booter-jetty.git</url>
   </scm>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.0</version>
+        <configuration>
+          <source>1.5</source>
+          <target>1.5</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
