@@ -12,6 +12,7 @@
   <properties>
     <versions.jetty8>8.1.8.v20121106</versions.jetty8>
   </properties>
+  <name>App.sh :: Jetty Booter</name>
   <dependencies>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
