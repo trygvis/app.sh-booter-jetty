@@ -93,6 +93,17 @@ public class JettyWebServer {
 
         public ContextHandler toJetty() {
             WebAppContext context = new WebAppContext();
+
+            /*
+             * By setting useFileMappedBuffer we prevent Jetty from memory-mapping the static resources
+             *
+             * The default servlet can be configured by setting parameters on the context in addition to the default
+             * servlet's init params, saving us from injecting the DefaultServlet programatically.
+             *
+             * http://stackoverflow.com/questions/184312/how-to-make-jetty-dynamically-load-static-pages
+             */
+            context.setInitParameter("org.eclipse.jetty.servlet.Default.useFileMappedBuffer", "false");
+
             context.setContextPath(this.contextPath);
             context.setWar(webapp.getAbsolutePath());
             if (extraClasspath != null) {
