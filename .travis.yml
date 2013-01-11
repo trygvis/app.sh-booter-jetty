@@ -1,0 +1,13 @@
+language: java
+ 
+env:
+  global:
+    - SONATYPE_USERNAME=80ymBYBJ
+    - secure: "EhM8g7ZMgU1BH/DZCB15IF0VAuClP6gb4KGSDRRAIEFNE02VCFFYdU1u2jaz\nzxZ5SU8AlXinZ8Q0tjP9JkYcq4Z+MNMHxIRzDTm+L2rvfHKol20nNrEHyb69\nj1GFpZvd4Ryt2Yfo89D/Rr7GRjx+6WnSFvQk1MWbKlLcDJwLQCE="
+
+install: "mvn -DskipTests -U -B install"
+
+after_success:
+  - python .travis-addServer.py
+  # No need to run clean or run tests when simply deploying.
+  - mvn -DskipTests deploy -B --settings ~/.m2/mySettings.xml
