@@ -4,14 +4,24 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
+import org.eclipse.jetty.util.IO;
 import org.eclipse.jetty.util.log.StdErrLog;
+import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.webapp.WebAppContext;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 
+/**
+ * A web server that's expected to be used from main() methods.
+ *
+ * The main method is expected to know how to configure the server. It will use System.err and System.exit(-1) on
+ * errors.
+ */
 public class JettyWebServer {
     private File basedir = new File("").getAbsoluteFile();
     private File tmp, extraClasspath;
@@ -35,6 +45,59 @@ public class JettyWebServer {
         return context;
     }
 
+    /**
+     * Adds a web application context from within the classpath.
+     *
+     * To get JSPs to work the app has to be extracted
+     *
+     * @param contextPath Where to "mount" the application, for example /myapp
+     * @param war Where there extracted files are places. Will be cleaned out before starting.
+     * @param prefix Where to start the classpath scan, for example "/my-awesome-webapp".
+     */
+    public Context addClasspathContext(String contextPath, File war, String prefix) throws Exception {
+        war = war.getAbsoluteFile();
+
+        // Clean out any old cruft
+        if (war.isDirectory()) {
+            IO.delete(war);
+        }
+
+        if (!war.mkdirs()) {
+            System.err.println("Could not create directory: " + war);
+            System.exit(-1);
+        }
+
+        // Classloaders doesn't like slash prefixed searches.
+        if (prefix.startsWith("/")) {
+            prefix = prefix.substring(1);
+        }
+
+        Enumeration<URL> enumeration = Main.class.getClassLoader().getResources(prefix);
+
+        // TODO: just check for presence of WEB-INF/web.xml after extraction.
+        if (!enumeration.hasMoreElements()) {
+            System.err.println("Could not look up classpath resource: '" + prefix + "'.");
+            System.exit(-1);
+        }
+
+        while (enumeration.hasMoreElements()) {
+            URL url = enumeration.nextElement();
+
+            try {
+                Resource resource = Resource.newResource(url);
+
+                resource.copyTo(war);
+            } catch (IOException e) {
+                System.err.println("Unable to extract " + url.toExternalForm() + " to " + war);
+            }
+        }
+
+        return addContext(contextPath, war);
+    }
+
+    /**
+     * This should be moved to the main method. JettyWebServer should only be code to set up Jetty.
+     */
     public void run() throws Exception {
         tmp = new File(basedir, "tmp");
 
@@ -65,7 +128,7 @@ public class JettyWebServer {
         ContextHandlerCollection handler = new ContextHandlerCollection();
         server.setHandler(handler);
         for (Context context : contexts) {
-            handler.addHandler(context.toJetty());
+            handler.addHandler(context.toJetty(tmp));
         }
 
         server.start();
@@ -98,7 +161,7 @@ public class JettyWebServer {
              * By setting useFileMappedBuffer we prevent Jetty from memory-mapping the static resources
              *
              * The default servlet can be configured by setting parameters on the context in addition to the default
-             * servlet's init params, saving us from injecting the DefaultServlet programatically.
+             * servlet's init params, saving us from injecting the DefaultServlet programmatically.
              *
              * http://stackoverflow.com/questions/184312/how-to-make-jetty-dynamically-load-static-pages
              */

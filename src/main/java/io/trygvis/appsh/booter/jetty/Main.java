@@ -35,6 +35,7 @@ public class Main {
             IO.close(is);
         }
 
+        // TODO: This should copy the output to the old std out until we have started if possible.
         setStreams(basedir, properties);
 
         JettyWebServer server;
@@ -47,7 +48,18 @@ public class Main {
                 String value = entry.getValue().toString();
 
                 if (key.startsWith("context.")) {
-                    server.addContext(key.substring(8), new File(basedir, value));
+                    String contextPath = key.substring(8);
+
+                    if (value.startsWith("classpath:")) {
+                        value = value.substring(10);
+
+                        File war = new File("wat");
+
+                        server.addClasspathContext(contextPath, war, value);
+                    }
+                    else {
+                        server.addContext(contextPath, new File(basedir, value));
+                    }
                 }
             }
 
