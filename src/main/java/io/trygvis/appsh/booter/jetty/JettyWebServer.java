@@ -24,7 +24,6 @@ import java.util.List;
  */
 public class JettyWebServer {
     private File basedir = new File("").getAbsoluteFile();
-    private File tmp, extraClasspath;
     private int httpPort = 8080;
 
     List<Context> contexts = new ArrayList<Context>();
@@ -37,75 +36,22 @@ public class JettyWebServer {
         this.httpPort = port;
     }
 
-    public Context addContext(String contextPath, File webapp) throws Exception {
-        Context context = new Context();
-        context.setContextPath(contextPath);
-        context.setWebapp(webapp);
+    public Context addContext(Context context) throws Exception {
         contexts.add(context);
         return context;
-    }
-
-    /**
-     * Adds a web application context from within the classpath.
-     *
-     * To get JSPs to work the app has to be extracted
-     *
-     * @param contextPath Where to "mount" the application, for example /myapp
-     * @param war Where there extracted files are places. Will be cleaned out before starting.
-     * @param prefix Where to start the classpath scan, for example "/my-awesome-webapp".
-     */
-    public Context addClasspathContext(String contextPath, File war, String prefix) throws Exception {
-        war = war.getAbsoluteFile();
-
-        // Clean out any old cruft
-        if (war.isDirectory()) {
-            IO.delete(war);
-        }
-
-        if (!war.mkdirs()) {
-            System.err.println("Could not create directory: " + war);
-            System.exit(-1);
-        }
-
-        // Classloaders doesn't like slash prefixed searches.
-        if (prefix.startsWith("/")) {
-            prefix = prefix.substring(1);
-        }
-
-        Enumeration<URL> enumeration = Main.class.getClassLoader().getResources(prefix);
-
-        // TODO: just check for presence of WEB-INF/web.xml after extraction.
-        if (!enumeration.hasMoreElements()) {
-            System.err.println("Could not look up classpath resource: '" + prefix + "'.");
-            System.exit(-1);
-        }
-
-        while (enumeration.hasMoreElements()) {
-            URL url = enumeration.nextElement();
-
-            try {
-                Resource resource = Resource.newResource(url);
-
-                resource.copyTo(war);
-            } catch (IOException e) {
-                System.err.println("Unable to extract " + url.toExternalForm() + " to " + war);
-            }
-        }
-
-        return addContext(contextPath, war);
     }
 
     /**
      * This should be moved to the main method. JettyWebServer should only be code to set up Jetty.
      */
     public void run() throws Exception {
-        tmp = new File(basedir, "tmp");
+        File tmp = new File(basedir, "tmp/jetty-booter");
 
         if (!tmp.isDirectory() && !tmp.mkdirs()) {
             throw new IOException("Could not create temp directory: " + tmp);
         }
 
-        extraClasspath = new File(basedir, "etc");
+        File extraClasspath = new File(basedir, "etc");
 
         if (!extraClasspath.isDirectory()) {
             extraClasspath = null;
@@ -127,26 +73,31 @@ public class JettyWebServer {
 
         ContextHandlerCollection handler = new ContextHandlerCollection();
         server.setHandler(handler);
+
+        ServerSettings settings = new ServerSettings(tmp, extraClasspath != null ? extraClasspath.getAbsolutePath() : null);
+
         for (Context context : contexts) {
-            handler.addHandler(context.toJetty(tmp));
+            handler.addHandler(context.toJetty(settings));
         }
 
         server.start();
         server.join();
     }
 
-    public class Context {
-        private File webapp;
-        private String contextPath;
+    public static class ServerSettings {
+        public final File tmp;
+        public final String extraClasspath;
 
-        public void setWebapp(File webapp) throws IOException {
-            if (!webapp.exists()) {
-                throw new IOException("File has to exist: " + webapp);
-            }
-            this.webapp = webapp;
+        public ServerSettings(File tmp, String extraClasspath) {
+            this.tmp = tmp;
+            this.extraClasspath = extraClasspath;
         }
+    }
 
-        public void setContextPath(String contextPath) {
+    private static abstract class Context {
+        public final String contextPath;
+
+        protected Context(String contextPath) {
             if (!contextPath.startsWith("/")) {
                 throw new RuntimeException("The context path has to start with '/'.");
             }
@@ -154,7 +105,30 @@ public class JettyWebServer {
             this.contextPath = contextPath;
         }
 
-        public ContextHandler toJetty() {
+        public String getContextPath() {
+            return contextPath;
+        }
+
+        protected abstract ContextHandler toJetty(ServerSettings settings) throws IOException;
+    }
+
+    public static class WarContext extends Context {
+        private final File webapp;
+
+        public WarContext(String contextPath, File webapp) throws IOException {
+            super(contextPath);
+            this.webapp = webapp;
+
+            if (!webapp.exists()) {
+                throw new IOException("File has to exist: " + webapp);
+            }
+        }
+
+        protected ContextHandler toJetty(ServerSettings settings) {
+            return warContext(settings, contextPath, webapp);
+        }
+
+        public static ContextHandler warContext(ServerSettings settings, String contextPath, File webapp) {
             WebAppContext context = new WebAppContext();
 
             /*
@@ -167,20 +141,88 @@ public class JettyWebServer {
              */
             context.setInitParameter("org.eclipse.jetty.servlet.Default.useFileMappedBuffer", "false");
 
-            context.setContextPath(this.contextPath);
+            context.setContextPath(contextPath);
             context.setWar(webapp.getAbsolutePath());
-            if (extraClasspath != null) {
-                context.setExtraClasspath(extraClasspath.getAbsolutePath());
+            if (settings.extraClasspath != null) {
+                context.setExtraClasspath(settings.extraClasspath);
             }
 
             context.setExtractWAR(true);
             // TODO: Should the temp directory be cleaned out before starting?
             String dir = contextPath.substring(1);
             if (dir.length() == 0) {
-                dir = "ROOT";
+                dir = "ROOT-tmp";
             }
-            context.setTempDirectory(new File(tmp, dir));
+            context.setTempDirectory(new File(settings.tmp, dir));
             return context;
+        }
+    }
+
+    /**
+     * Adds a web application context from within the classpath.
+     *
+     * To get JSPs to work the app has to be extracted
+     */
+    public static class ClasspathContext extends Context {
+        private final String prefix;
+
+        /**
+         * @param contextPath Where to "mount" the application, for example /my-app
+         * @param prefix Where to start the classpath scan, for example "/my-awesome-webapp".
+         */
+        public ClasspathContext(String contextPath, String prefix) {
+            super(contextPath);
+            this.prefix = prefix;
+        }
+
+        protected ContextHandler toJetty(ServerSettings settings) throws IOException {
+            String prefix = this.prefix;
+
+            String tmpName;
+            if (contextPath.length() == 1) {
+                tmpName = "ROOT-web";
+            } else {
+                tmpName = contextPath.substring(1).replace('/', '_');
+            }
+
+            File war = new File(settings.tmp, tmpName);
+            // Clean out any old cruft
+            if (war.isDirectory()) {
+                IO.delete(war);
+            }
+
+            if (!war.mkdirs()) {
+                System.err.println("Could not create directory: " + war);
+                System.exit(-1);
+            }
+
+            // Classloaders doesn't like slash prefixed searches.
+            if (prefix.startsWith("/")) {
+                prefix = prefix.substring(1);
+            }
+
+            Enumeration<URL> enumeration = Main.class.getClassLoader().getResources(prefix);
+
+            // TODO: just check for presence of WEB-INF/web.xml after extraction.
+            if (!enumeration.hasMoreElements()) {
+                System.err.println("Could not look up classpath resource: '" + prefix + "'.");
+                System.exit(-1);
+            }
+
+            while (enumeration.hasMoreElements()) {
+                URL url = enumeration.nextElement();
+
+                try {
+                    Resource resource = Resource.newResource(url);
+
+                    resource.copyTo(war);
+                } catch (IOException e) {
+                    System.err.println("Unable to extract " + url.toExternalForm() + " to " + war + ": " + e.getMessage());
+                    System.exit(-1);
+                }
+            }
+
+            return WarContext.warContext(settings, contextPath, war);
         }
     }
 }

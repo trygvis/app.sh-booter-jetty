@@ -53,12 +53,10 @@ public class Main {
                     if (value.startsWith("classpath:")) {
                         value = value.substring(10);
 
-                        File war = new File("wat");
-
-                        server.addClasspathContext(contextPath, war, value);
+                        server.addContext(new JettyWebServer.ClasspathContext(contextPath, value));
                     }
                     else {
-                        server.addContext(contextPath, new File(basedir, value));
+                        server.addContext(new JettyWebServer.WarContext(contextPath, new File(basedir, value)));
                     }
                 }
             }

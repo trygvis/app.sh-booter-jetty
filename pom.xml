@@ -9,10 +9,10 @@
   <groupId>io.trygvis.appsh</groupId>
   <artifactId>booter-jetty</artifactId>
   <version>8.1.8.v20121106+2-SNAPSHOT</version>
+  <name>App.sh :: Jetty Booter for Jetty v${versions.jetty8}</name>
   <properties>
     <versions.jetty8>8.1.8.v20121106</versions.jetty8>
   </properties>
-  <name>App.sh :: Jetty Booter</name>
   <dependencies>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
