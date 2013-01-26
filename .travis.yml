@@ -10,4 +10,4 @@ install: "mvn -DskipTests -U -B install"
 after_success:
   - python .travis-addServer.py
   # No need to run clean or run tests when simply deploying.
-  - mvn -DskipTests deploy -B --settings ~/.m2/mySettings.xml
+  - mvn -DskipTests -B --settings ~/.m2/mySettings.xml deploy
