@@ -8,10 +8,10 @@
   </parent>
   <groupId>io.trygvis.appsh</groupId>
   <artifactId>booter-jetty</artifactId>
-  <version>8.1.8.v20121106+3-SNAPSHOT</version>
+  <version>8.1.11.v20130520-1-SNAPSHOT</version>
   <name>App.sh :: Jetty Booter for Jetty v${versions.jetty8}</name>
   <properties>
-    <versions.jetty8>8.1.8.v20121106</versions.jetty8>
+    <versions.jetty8>8.1.11.v20130520</versions.jetty8>
   </properties>
   <dependencies>
     <dependency>
@@ -26,8 +26,8 @@
     </dependency>
 
     <!--
-    Same for 8.1.8.
-    $ (cd jetty-distribution-8.1.7.v20120910; find * -name \*.jar|sort|grep jsp)
+    Same for 8.1.8 and 8.1.11.
+    $ (cd jetty-distribution-8.1.11.v20130520; find * -name \*.jar|sort|grep jsp)
     lib/jsp/com.sun.el-2.2.0.v201108011116.jar
     lib/jsp/javax.el-2.2.0.v201108011116.jar
     lib/jsp/javax.servlet.jsp-2.2.0.v201112011158.jar
